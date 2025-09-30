@@ -1,11 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_nfc_kit/flutter_nfc_kit.dart';
 import '../services/nfc_service.dart';
+import '../services/selected_music_service.dart';
 import '../models/nfc_scan_result.dart';
 import '../widgets/nfc_scan_button.dart';
 import '../widgets/nfc_animation_icon.dart';
-import 'history_screen.dart';
-import 'settings_screen.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -16,6 +15,7 @@ class HomeScreen extends StatefulWidget {
 
 class _HomeScreenState extends State<HomeScreen> {
   final NFCService _nfcService = NFCService();
+  final SelectedMusicService _selectedMusicService = SelectedMusicService();
   bool _isNFCAvailable = false;
   bool _isScanning = false;
   NFCScanResult? _lastScanResult;
@@ -66,55 +66,141 @@ class _HomeScreenState extends State<HomeScreen> {
   Future<void> _startNFCWrite() async {
     if (!_isNFCAvailable) return;
 
-    final controller = TextEditingController();
-    final result = await showDialog<Map<String, String>>(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('Ghi dữ liệu NFC'),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            TextField(
-              controller: controller,
-              decoration: const InputDecoration(
-                labelText: 'Nhập nội dung',
-                hintText: 'Ví dụ: Hello NFC hoặc https://example.com',
-                border: OutlineInputBorder(),
+    // Kiểm tra xem có bài nhạc được chọn không
+    final selectedMusic = _selectedMusicService.selectedMusic;
+    String? initialText;
+    String? initialType;
+
+    if (selectedMusic != null) {
+      // Nếu có bài nhạc được chọn, hỏi xem có muốn ghi URL nhạc không
+      final useMusic = await showDialog<bool>(
+        context: context,
+        builder: (context) => AlertDialog(
+          title: const Text('Ghi dữ liệu NFC'),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              const Text('Bạn đã chọn bài nhạc:'),
+              const SizedBox(height: 8),
+              Container(
+                padding: const EdgeInsets.all(12),
+                decoration: BoxDecoration(
+                  color: Colors.blue.shade50,
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: Row(
+                  children: [
+                    Text(
+                      selectedMusic.thumbnail ?? '🎵',
+                      style: const TextStyle(fontSize: 30),
+                    ),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            selectedMusic.title,
+                            style: const TextStyle(fontWeight: FontWeight.bold),
+                          ),
+                          Text(
+                            selectedMusic.artist,
+                            style: TextStyle(
+                              fontSize: 12,
+                              color: Colors.grey.shade700,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
               ),
-              maxLines: 3,
+              const SizedBox(height: 16),
+              const Text('Bạn muốn ghi gì lên thẻ NFC?'),
+            ],
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context, null),
+              child: const Text('Hủy'),
             ),
-            const SizedBox(height: 12),
-            const Text(
-              'Chọn loại dữ liệu:',
-              style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold),
+            TextButton(
+              onPressed: () => Navigator.pop(context, false),
+              child: const Text('Nhập tùy chỉnh'),
+            ),
+            FilledButton(
+              onPressed: () => Navigator.pop(context, true),
+              child: const Text('Ghi URL nhạc'),
             ),
           ],
         ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: const Text('Hủy'),
-          ),
-          FilledButton(
-            onPressed: () => Navigator.pop(context, {
-              'text': controller.text,
-              'type': 'text',
-            }),
-            child: const Text('Ghi Text'),
-          ),
-          FilledButton(
-            onPressed: () => Navigator.pop(context, {
-              'text': controller.text,
-              'type': 'uri',
-            }),
-            style: FilledButton.styleFrom(backgroundColor: Colors.green),
-            child: const Text('Ghi URI'),
-          ),
-        ],
-      ),
-    );
+      );
 
-    if (result == null || result['text']?.isEmpty == true) return;
+      if (useMusic == null) return;
+
+      if (useMusic == true) {
+        // Ghi trực tiếp URL nhạc
+        initialText = selectedMusic.url;
+        initialType = 'uri';
+      }
+    }
+
+    // Nếu không có nhạc hoặc chọn nhập tùy chỉnh
+    if (initialText == null) {
+      final controller = TextEditingController();
+      final result = await showDialog<Map<String, String>>(
+        context: context,
+        builder: (context) => AlertDialog(
+          title: const Text('Ghi dữ liệu NFC'),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              TextField(
+                controller: controller,
+                decoration: const InputDecoration(
+                  labelText: 'Nhập nội dung',
+                  hintText: 'Ví dụ: Hello NFC hoặc https://example.com',
+                  border: OutlineInputBorder(),
+                ),
+                maxLines: 3,
+              ),
+              const SizedBox(height: 12),
+              const Text(
+                'Chọn loại dữ liệu:',
+                style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold),
+              ),
+            ],
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context),
+              child: const Text('Hủy'),
+            ),
+            FilledButton(
+              onPressed: () => Navigator.pop(context, {
+                'text': controller.text,
+                'type': 'text',
+              }),
+              child: const Text('Ghi Text'),
+            ),
+            FilledButton(
+              onPressed: () => Navigator.pop(context, {
+                'text': controller.text,
+                'type': 'uri',
+              }),
+              style: FilledButton.styleFrom(backgroundColor: Colors.green),
+              child: const Text('Ghi URI'),
+            ),
+          ],
+        ),
+      );
+
+      if (result == null || result['text']?.isEmpty == true) return;
+      initialText = result['text'];
+      initialType = result['type'];
+    }
 
     setState(() {
       _isScanning = true;
@@ -122,10 +208,10 @@ class _HomeScreenState extends State<HomeScreen> {
     });
 
     try {
-      if (result['type'] == 'uri') {
-        await _nfcService.writeNFCUri(result['text']!);
+      if (initialType == 'uri') {
+        await _nfcService.writeNFCUri(initialText!);
       } else {
-        await _nfcService.writeNFCText(result['text']!);
+        await _nfcService.writeNFCText(initialText!);
       }
 
       setState(() {
@@ -204,34 +290,16 @@ class _HomeScreenState extends State<HomeScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final selectedMusic = _selectedMusicService.selectedMusic;
+
     return Scaffold(
       appBar: AppBar(
-        title: const Text('NFC App'),
+        title: const Text('NFC Đọc/Ghi'),
         actions: [
           IconButton(
             icon: const Icon(Icons.refresh),
             onPressed: _checkNFCAvailability,
             tooltip: 'Kiểm tra lại NFC',
-          ),
-          IconButton(
-            icon: const Icon(Icons.history),
-            onPressed: () {
-              Navigator.push(
-                context,
-                MaterialPageRoute(builder: (context) => const HistoryScreen()),
-              );
-            },
-            tooltip: 'Lịch sử',
-          ),
-          IconButton(
-            icon: const Icon(Icons.settings),
-            onPressed: () {
-              Navigator.push(
-                context,
-                MaterialPageRoute(builder: (context) => const SettingsScreen()),
-              );
-            },
-            tooltip: 'Cài đặt',
           ),
         ],
       ),
@@ -245,7 +313,59 @@ class _HomeScreenState extends State<HomeScreen> {
                   child: Column(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      const SizedBox(height: 40),
+                      const SizedBox(height: 20),
+
+                      // Hiển thị bài nhạc đã chọn (nếu có)
+                      if (selectedMusic != null)
+                        Container(
+                          width: double.infinity,
+                          margin: const EdgeInsets.only(bottom: 20),
+                          padding: const EdgeInsets.all(16),
+                          decoration: BoxDecoration(
+                            color: Colors.green.shade50,
+                            borderRadius: BorderRadius.circular(12),
+                            border: Border.all(color: Colors.green.shade200),
+                          ),
+                          child: Row(
+                            children: [
+                              Text(
+                                selectedMusic.thumbnail ?? '🎵',
+                                style: const TextStyle(fontSize: 40),
+                              ),
+                              const SizedBox(width: 12),
+                              Expanded(
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    const Text(
+                                      'Bài nhạc đã chọn:',
+                                      style: TextStyle(
+                                        fontSize: 11,
+                                        color: Colors.green,
+                                        fontWeight: FontWeight.bold,
+                                      ),
+                                    ),
+                                    Text(
+                                      selectedMusic.title,
+                                      style: const TextStyle(
+                                        fontWeight: FontWeight.bold,
+                                        fontSize: 15,
+                                      ),
+                                    ),
+                                    Text(
+                                      selectedMusic.artist,
+                                      style: TextStyle(
+                                        fontSize: 13,
+                                        color: Colors.grey.shade700,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+
                       NFCAnimationIcon(isScanning: _isScanning),
                       const SizedBox(height: 32),
                       Text(
@@ -326,10 +446,12 @@ class _HomeScreenState extends State<HomeScreen> {
                 ),
                 const SizedBox(height: 12),
                 NFCScanButton(
-                  label: 'Ghi NFC',
+                  label: selectedMusic != null
+                      ? 'Ghi NFC (có bài nhạc)'
+                      : 'Ghi NFC',
                   icon: Icons.edit,
                   onPressed: _isScanning ? null : _startNFCWrite,
-                  color: Colors.green,
+                  color: selectedMusic != null ? Colors.green : Colors.orange,
                 ),
                 const SizedBox(height: 12),
                 NFCScanButton(

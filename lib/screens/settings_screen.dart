@@ -118,27 +118,71 @@ class _SettingsScreenState extends State<SettingsScreen> {
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text('Về NFC App'),
-        content: const SingleChildScrollView(
+        title: Row(
+          children: [
+            Container(
+              padding: const EdgeInsets.all(8),
+              decoration: BoxDecoration(
+                color: Colors.blue.shade100,
+                borderRadius: BorderRadius.circular(8),
+              ),
+              child: const Icon(Icons.nfc, color: Colors.blue, size: 30),
+            ),
+            const SizedBox(width: 12),
+            const Text('NFC App'),
+          ],
+        ),
+        content: SingleChildScrollView(
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             mainAxisSize: MainAxisSize.min,
             children: [
-              Text(
-                'NFC App v0.1.0',
-                style: TextStyle(fontWeight: FontWeight.bold),
+              const Text(
+                'Phiên bản 0.1.0',
+                style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
               ),
-              SizedBox(height: 16),
-              Text('Ứng dụng quản lý thẻ NFC với đầy đủ tính năng:'),
-              SizedBox(height: 8),
-              Text('• Đọc thẻ NFC'),
-              Text('• Ghi dữ liệu lên thẻ'),
-              Text('• Xóa dữ liệu trên thẻ'),
-              Text('• Lưu lịch sử quét'),
-              SizedBox(height: 16),
-              Text(
-                'Được phát triển với Flutter',
-                style: TextStyle(fontStyle: FontStyle.italic),
+              const SizedBox(height: 16),
+              const Text(
+                '📱 Ứng dụng quản lý thẻ NFC toàn diện',
+                style: TextStyle(fontSize: 15),
+              ),
+              const SizedBox(height: 16),
+              _buildFeatureItem('✅', 'Đọc thông tin thẻ NFC'),
+              _buildFeatureItem('✏️', 'Ghi dữ liệu Text và URL'),
+              _buildFeatureItem('🎵', 'Ghi link nhạc lên thẻ NFC'),
+              _buildFeatureItem('🗑️', 'Xóa dữ liệu trên thẻ'),
+              _buildFeatureItem('📜', 'Lưu lịch sử quét thẻ'),
+              _buildFeatureItem('🔍', 'Tìm kiếm bài hát'),
+              const SizedBox(height: 16),
+              Container(
+                padding: const EdgeInsets.all(12),
+                decoration: BoxDecoration(
+                  color: Colors.grey.shade100,
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: const Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      '🔧 Công nghệ:',
+                      style: TextStyle(fontWeight: FontWeight.bold),
+                    ),
+                    SizedBox(height: 8),
+                    Text('• Flutter Framework'),
+                    Text('• flutter_nfc_kit'),
+                    Text('• NDEF Protocol'),
+                  ],
+                ),
+              ),
+              const SizedBox(height: 16),
+              const Text(
+                '© 2024 NFC App\nPhát triển với ❤️ bằng Flutter',
+                style: TextStyle(
+                  fontStyle: FontStyle.italic,
+                  fontSize: 12,
+                  color: Colors.grey,
+                ),
+                textAlign: TextAlign.center,
               ),
             ],
           ),
@@ -153,50 +197,133 @@ class _SettingsScreenState extends State<SettingsScreen> {
     );
   }
 
+  Widget _buildFeatureItem(String emoji, String text) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 4),
+      child: Row(
+        children: [
+          Text(emoji, style: const TextStyle(fontSize: 18)),
+          const SizedBox(width: 12),
+          Expanded(child: Text(text)),
+        ],
+      ),
+    );
+  }
+
   void _showHelpDialog() {
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text('Hướng dẫn sử dụng'),
-        content: const SingleChildScrollView(
+        title: const Text('📖 Hướng dẫn sử dụng'),
+        content: SingleChildScrollView(
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             mainAxisSize: MainAxisSize.min,
             children: [
-              Text(
-                'Đọc thẻ NFC:',
-                style: TextStyle(fontWeight: FontWeight.bold),
+              _buildHelpSection(
+                icon: Icons.nfc,
+                title: '1️⃣ Tab NFC (Trang chủ)',
+                steps: [
+                  '• Đọc thẻ NFC: Nhấn "Đọc NFC" → Đặt thẻ lên',
+                  '• Ghi Text: Nhấn "Ghi NFC" → Chọn "Ghi Text" → Nhập nội dung → Đặt thẻ',
+                  '• Ghi URL: Nhấn "Ghi NFC" → Chọn "Ghi URI" → Nhập link → Đặt thẻ',
+                  '• Ghi URL nhạc: Chọn bài trong tab Music trước → Quay lại → Nhấn "Ghi NFC" → Chọn "Ghi URL nhạc"',
+                  '• Xóa: Nhấn "Xóa NFC" → Xác nhận → Đặt thẻ',
+                ],
               ),
-              Text('1. Nhấn nút "Đọc NFC"'),
-              Text('2. Đặt thẻ NFC gần thiết bị'),
-              Text('3. Chờ quá trình đọc hoàn tất'),
-              SizedBox(height: 16),
-              Text(
-                'Ghi dữ liệu:',
-                style: TextStyle(fontWeight: FontWeight.bold),
+              const Divider(),
+              _buildHelpSection(
+                icon: Icons.music_note,
+                title: '2️⃣ Tab Music',
+                steps: [
+                  '• Tìm kiếm bài hát theo tên hoặc ca sĩ',
+                  '• Nhấn vào bài hát để chọn (chỉ chọn được 1 bài)',
+                  '• Bài đã chọn sẽ hiển thị ở card phía trên',
+                  '• Quay lại tab NFC để ghi URL nhạc lên thẻ',
+                  '• Nhấn nút X để bỏ chọn bài hát',
+                ],
               ),
-              Text('1. Nhấn nút "Ghi NFC"'),
-              Text('2. Nhập nội dung cần ghi'),
-              Text('3. Đặt thẻ NFC gần thiết bị'),
-              SizedBox(height: 16),
-              Text(
-                'Xóa dữ liệu:',
-                style: TextStyle(fontWeight: FontWeight.bold),
+              const Divider(),
+              _buildHelpSection(
+                icon: Icons.history,
+                title: '3️⃣ Tab Lịch sử',
+                steps: [
+                  '• Xem tất cả lần đọc/ghi thẻ NFC',
+                  '• Nhấn vào item để xem chi tiết',
+                  '• Sao chép dữ liệu vào clipboard',
+                  '• Xóa từng item hoặc xóa tất cả',
+                ],
               ),
-              Text('1. Nhấn nút "Xóa NFC"'),
-              Text('2. Xác nhận xóa'),
-              Text('3. Đặt thẻ NFC gần thiết bị'),
-              SizedBox(height: 16),
-              Text(
-                'Lưu ý:',
-                style: TextStyle(
-                  fontWeight: FontWeight.bold,
-                  color: Colors.red,
+              const Divider(),
+              _buildHelpSection(
+                icon: Icons.settings,
+                title: '4️⃣ Tab Cài đặt',
+                steps: [
+                  '• Bật/tắt tự động lưu lịch sử',
+                  '• Bật/tắt rung khi quét',
+                  '• Bật/tắt âm thanh',
+                  '• Xem thông tin ứng dụng',
+                ],
+              ),
+              const SizedBox(height: 16),
+              Container(
+                padding: const EdgeInsets.all(12),
+                decoration: BoxDecoration(
+                  color: Colors.orange.shade50,
+                  borderRadius: BorderRadius.circular(8),
+                  border: Border.all(color: Colors.orange.shade200),
+                ),
+                child: const Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      children: [
+                        Icon(
+                          Icons.warning_amber,
+                          color: Colors.orange,
+                          size: 20,
+                        ),
+                        SizedBox(width: 8),
+                        Text(
+                          '⚠️ Lưu ý quan trọng:',
+                          style: TextStyle(
+                            fontWeight: FontWeight.bold,
+                            color: Colors.orange,
+                          ),
+                        ),
+                      ],
+                    ),
+                    SizedBox(height: 8),
+                    Text('• Giữ thẻ NFC sát thiết bị khi quét'),
+                    Text('• KHÔNG di chuyển thẻ trong lúc ghi/xóa'),
+                    Text('• Một số thẻ có thể bị khóa ghi'),
+                    Text('• Thẻ MIFARE Classic cần authentication'),
+                    Text('• iPhone chỉ ghi được thẻ NDEF'),
+                  ],
                 ),
               ),
-              Text('• Giữ thẻ gần thiết bị trong khi quét'),
-              Text('• Không di chuyển thẻ trong quá trình ghi/xóa'),
-              Text('• Một số thẻ có thể được bảo vệ ghi'),
+              const SizedBox(height: 16),
+              Container(
+                padding: const EdgeInsets.all(12),
+                decoration: BoxDecoration(
+                  color: Colors.blue.shade50,
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: const Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      '💡 Mẹo hay:',
+                      style: TextStyle(fontWeight: FontWeight.bold),
+                    ),
+                    SizedBox(height: 8),
+                    Text('• Ghi URL Spotify/YouTube để tạo thẻ nhạc'),
+                    Text('• Ghi link WiFi để chia sẻ mật khẩu'),
+                    Text('• Ghi vCard để chia sẻ danh bạ'),
+                    Text('• Ghi link website cho marketing'),
+                  ],
+                ),
+              ),
             ],
           ),
         ),
@@ -207,6 +334,40 @@ class _SettingsScreenState extends State<SettingsScreen> {
           ),
         ],
       ),
+    );
+  }
+
+  Widget _buildHelpSection({
+    required IconData icon,
+    required String title,
+    required List<String> steps,
+  }) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Row(
+          children: [
+            Icon(icon, color: Colors.blue, size: 24),
+            const SizedBox(width: 8),
+            Expanded(
+              child: Text(
+                title,
+                style: const TextStyle(
+                  fontWeight: FontWeight.bold,
+                  fontSize: 15,
+                ),
+              ),
+            ),
+          ],
+        ),
+        const SizedBox(height: 8),
+        ...steps.map(
+          (step) => Padding(
+            padding: const EdgeInsets.only(left: 32, top: 4),
+            child: Text(step, style: const TextStyle(fontSize: 13)),
+          ),
+        ),
+      ],
     );
   }
 }
